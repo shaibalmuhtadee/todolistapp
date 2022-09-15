@@ -6,19 +6,23 @@ import { TextField } from "@material-ui/core"
 import { db } from "../firebase"
 import firebase from "firebase"
 import TodoListItem from "./Todo"
+import TodoListItem2 from "./Todo2"
 
 export default function Dashboard() {
   const [error, setError] = useState("")
   const { currentUser, logout } = useAuth()
   const history = useHistory()
+
   const [dateState, setDateState] = useState(new Date());
   useEffect(() => {
     setInterval(() => setDateState(new Date()), 30000);
   }, []);
+  
   const [todoInput, setTodoInput] = useState("");
   const [todos, setTodos] = useState([]);
   useEffect(() => {
     getTodos();
+    getTodos2();
   }, []); // run only on first launch
   function getTodos() {
     db.collection("todos").onSnapshot(function (querySnapshot) {
@@ -31,7 +35,6 @@ export default function Dashboard() {
       );
     });
   }
-  
   function addTodo(e) {
     e.preventDefault();
     
@@ -42,6 +45,31 @@ export default function Dashboard() {
     });
 
     setTodoInput("");
+  }
+
+  const [todoInput2, setTodoInput2] = useState("");
+  const [todos2, setTodos2] = useState([]);
+  function getTodos2() {
+    db.collection("todos2").onSnapshot(function (querySnapshot) {
+      setTodos2(
+        querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          todo: doc.data().todo,
+          inprogress: doc.data().inprogress
+        }))
+      );
+    });
+  }
+  function addTodo2(e) {
+    e.preventDefault();
+    
+    db.collection("todos2").add({
+      inprogress: true,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      todo: todoInput2,
+    });
+
+    setTodoInput2("");
   }
 
   async function handleLogout() {
@@ -122,7 +150,27 @@ export default function Dashboard() {
             </Card>  
           </Col>
           <Col sm={6}>
-            <h1>yeet</h1>
+            <Card className="w-100 text-center my-2 border-0">
+              <h4>Hers</h4>
+              <Row className="mx-2 align-items-center">
+                <form className="w-100">
+                  <TextField 
+                    className="col-10 pr-2"
+                    id="standard-basic" 
+                    label="Write a Todo"
+                    value={todoInput2}
+                    onChange={(e) => setTodoInput2(e.target.value)}
+                  />
+                  <Button type="submit" onClick={addTodo2} className="col-2">Add</Button>
+                </form>
+              </Row>
+              {todos2.map((todo) => (
+                <TodoListItem2
+                  todo={todo.todo} 
+                  inprogress={todo.inprogress} 
+                  id={todo.id} />
+              ))}
+            </Card>
           </Col>
         </Row>
       </Container>
